@@ -1,236 +1,319 @@
 'use strict';
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// BANKIST APP
+// const { header } = require("express/lib/response");
 
-// Data
-const account1 = {
-  owner: 'Jonas Schmedtmann',
-  movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
-  interestRate: 1.2, // %
-  pin: 1111,
+///////////////////////////////////////
+// Modal window
+
+const modal = document.querySelector('.modal');
+const overlay = document.querySelector('.overlay');
+const btnCloseModal = document.querySelector('.btn--close-modal');
+const btnsOpenModal = document.querySelectorAll('.btn--show-modal');
+const btnScrollTo = document.querySelector('.btn--scroll-to');
+const section1 = document.querySelector('#section--1');
+const nav = document.querySelector('.nav');
+const tabs = document.querySelectorAll('.operations__tab');
+const tabsContainer = document.querySelector('.operations__tab-container');
+const tabsContent = document.querySelectorAll('.operations__content');
+const header = document.querySelector('.header');
+const imgTarget = document.querySelectorAll('img[data-src]')
+
+
+
+
+
+
+
+btnScrollTo.addEventListener('click', function (e) {
+  const s1coords = section1.getBoundingClientRect()
+  console.log(s1coords)
+
+  // method 1 (old method)
+  // window.scrollTo({
+  //   left: s1coords.left + window.pageXOffset,
+  //   top: s1coords.top + window.pageYOffset,
+  //   behavior: 'smooth'
+  // })
+
+  // method 2 ( only works in modern browsers)
+  section1.scrollIntoView({ behavior: 'smooth' })
+})
+
+
+
+//=============================== Scroll nav-bar
+
+// document.querySelectorAll('.nav__link').forEach(function (el) {
+//   el.addEventListener('click', function (e) {
+//     e.preventDefault()
+//     const id = this.getAttribute('href')
+//     const sec = document
+//       .querySelector(id)
+//       .scrollIntoView({ behavior: 'smooth' })
+//   })
+// })
+
+
+document.querySelector('.nav__links').addEventListener('click', function (e) {
+  e.preventDefault()
+  if (e.target.classList.contains('nav__link')) {
+    const id = e.target.getAttribute('href')
+    document.querySelector(id)
+      .scrollIntoView({ behavior: 'smooth' })
+  }
+})
+
+
+// =============================== Tabbed component
+
+tabsContainer.addEventListener('click', function (e) {
+  const clicked = e.target.closest('.operations__tab')
+  const data = e.target.getAttribute('data-tab')
+
+  if (!clicked) return
+
+  tabs.forEach(t =>
+    t.classList.remove('operations__tab--active'))
+  tabsContent.forEach(c =>
+    c.classList.remove('operations__content--active'))
+
+  clicked.classList.add('operations__tab--active')
+
+
+
+  document.querySelector(`.operations__content--${data}`)
+    .classList.add('operations__content--active')
+})
+
+
+// =================================================================================================
+const openModal = function (e) {
+  e.preventDefault()
+  modal.classList.remove('hidden');
+  overlay.classList.remove('hidden');
 };
 
-const account2 = {
-  owner: 'Jessica Davis',
-  movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
-  interestRate: 1.5,
-  pin: 2222,
+const closeModal = function () {
+  modal.classList.add('hidden');
+  overlay.classList.add('hidden');
 };
 
-const account3 = {
-  owner: 'Steven Thomas Williams',
-  movements: [200, -200, 340, -300, -20, 50, 400, -460],
-  interestRate: 0.7,
-  pin: 3333,
-};
 
-const account4 = {
-  owner: 'Sarah Smith',
-  movements: [430, 1000, 700, 50, 90],
-  interestRate: 1,
-  pin: 4444,
-};
+btnCloseModal.addEventListener('click', closeModal);
+overlay.addEventListener('click', closeModal);
 
-const accounts = [account1, account2, account3, account4];
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+    closeModal();
+  }
+});
 
-// Elements
-const labelWelcome = document.querySelector('.welcome');
-const labelDate = document.querySelector('.date');
-const labelBalance = document.querySelector('.balance__value');
-const labelSumIn = document.querySelector('.summary__value--in');
-const labelSumOut = document.querySelector('.summary__value--out');
-const labelSumInterest = document.querySelector('.summary__value--interest');
-const labelTimer = document.querySelector('.timer');
 
-const containerApp = document.querySelector('.app');
-const containerMovements = document.querySelector('.movements');
+const handleHover = function (e, opacity) {
+  if (e.target.classList.contains('nav__link')) {
+    const link = e.target
+    const siblings = link.closest('.nav').querySelectorAll('.nav__link')
+    const logo = link.closest('.nav').querySelector('img')
 
-const btnLogin = document.querySelector('.login__btn');
-const btnTransfer = document.querySelector('.form__btn--transfer');
-const btnLoan = document.querySelector('.form__btn--loan');
-const btnClose = document.querySelector('.form__btn--close');
-const btnSort = document.querySelector('.btn--sort');
+    siblings.forEach(el => {
+      if (el !== link) el.style.opacity = this
+    })
+    logo.style.opacity = this
+  }
+}
 
-const inputLoginUsername = document.querySelector('.login__input--user');
-const inputLoginPin = document.querySelector('.login__input--pin');
-const inputTransferTo = document.querySelector('.form__input--to');
-const inputTransferAmount = document.querySelector('.form__input--amount');
-const inputLoanAmount = document.querySelector('.form__input--loan-amount');
-const inputCloseUsername = document.querySelector('.form__input--user');
-const inputClosePin = document.querySelector('.form__input--pin');
 
-// Func for display all movements 
-const dispayMovements = function (movements, sort = false) {
-  containerMovements.innerHTML = ''
+nav.addEventListener('mouseover', handleHover.bind(0.5))
 
-  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+nav.addEventListener('mouseout', handleHover.bind(1))
 
-  movs.forEach(function (mov, i) {
-    const type = mov > 0 ? 'deposit' : "withdrawal"
+// Sticky navigation
+// const initialCoords = section1.getBoundingClientRect()
 
-    const html = `
-        <div class="movements__row">
-          <div class="movements__type movements__type--${type}"> ${i + 1} ${type}</div>
-          <div class="movements__date">3 days ago</div>
-          <div class="movements__value">${mov}€</div>
-        </div>
-    `
-    containerMovements.insertAdjacentHTML('afterbegin', html)
+// window.addEventListener('scroll', function () {
+//   if (window.scrollY > initialCoords.top) nav.classList.add('sticky')
+//   else nav.classList.remove('sticky')
+// })
+
+// Sticky navigation using  Intersection Observe API
+const navHeight = nav.getBoundingClientRect().height
+
+const obsCallBack = function (entries, observer) {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) nav.classList.add('sticky')
+    else nav.classList.remove('sticky')
   })
+}
+
+const obsOptions = {
+  root: null,
+  threshold: 0,
+  rootMargin: `-${navHeight}px`,
+}
+
+const observer = new IntersectionObserver(obsCallBack, obsOptions)
+observer.observe(header)
+
+
+// Reveal sections
+const allSections = document.querySelectorAll('.section')
+
+const revealSection = function (entries, observer) {
+  const [entry] = entries
+  if (!entry.isIntersecting) return
+  entry.target.classList.remove('section--hidden')
+  observer.unobserve(entry.target)
 
 }
 
-
-
-// func to show the current balance
-const calcPrintBalance = (acc) => {
-  acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0);
-  // acc.balance = balance
-  labelBalance.textContent = `${acc.balance}€`;
-}
-
-// func to show the interest balance
-const calcDisplaySummary = function (acc) {
-  const BalanceIN = acc.movements
-    .filter(mov => mov > 0)
-    .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = `${BalanceIN}€`
-  const BalanceOUT = acc.movements
-    .filter(mov => mov < 0)
-    .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = `${Math.abs(BalanceOUT)}€`
-
-  const interest = acc.movements
-    .filter(mov => mov > 0)
-    .map(deposit => deposit * acc.interestRate / 100)
-    .filter(lo => lo >= 1)
-    .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = `${interest}€`
-}
-
-
-
-// func to create the user login
-const createUsername = function (accs) {
-  accs.forEach(function (acc) {
-    acc.username = acc.owner
-      .toLowerCase()
-      .split(' ')
-      .map(name => name[0])
-      .join('')
+const sectionObserver = new IntersectionObserver
+  (revealSection, {
+    root: null,
+    threshold: 0.15,
   })
+allSections.forEach(function (section) {
+  sectionObserver.observe(section)
+  section.classList.add('section--hidden')
+})
+
+
+// lazy loading images
+
+console.log(imgTarget)
+
+const loadImg = function (entries, observer) {
+  const [entry] = entries
+  if (!entry.isIntersecting) return
+  entry.target.src = entry.target.dataset.src
+
+  entry.target.addEventListener('load', function () {
+    entry.target.classList.remove('lazy-img')
+  })
+  observer.unobserve(entry.target)
 }
-createUsername(accounts)
-const updateUI = function (acc) {
 
-  dispayMovements(acc.movements)
+const imgObserver = new IntersectionObserver
+  (loadImg,
+    {
+      root: null,
+      threshold: 0,
+      rootMargin: '-200px'
 
-  calcPrintBalance(acc)
-
-  calcDisplaySummary(acc)
-}
-
-// login funciton 
-let currentAccount;
-btnLogin.addEventListener('click', function (e) {
-  e.preventDefault()
-
-  currentAccount = accounts.find(
-    acc => acc.username === inputLoginUsername.value)
-  console.log(currentAccount)
-
-  if (currentAccount?.pin === Number(inputLoginPin.value)) {
-    labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(' ')[0]}`
-  }
-  containerApp.style.opacity = 100
-
-  // clear the input fields
-  inputLoginUsername.value = inputLoginPin.value = ''
-  inputLoginPin.blur()
-
-  // call func to display the bank information 
-  updateUI(currentAccount)
-})
-
-btnTransfer.addEventListener('click', function (e) {
-  e.preventDefault()
-  const amount = Number(inputTransferAmount.value);
-  const receiverAcc = accounts
-    .find(acc => acc.username === inputTransferTo.value)
-  inputTransferAmount.value = inputTransferTo.value
-
-  if (amount > 0 &&
-    receiverAcc && currentAccount.balance >= amount
-    && receiverAcc?.username !== currentAccount.username) {
-    currentAccount.movements.push(-amount)
-    receiverAcc.movements.push(amount)
-
-    // update UI
-    updateUI(currentAccount)
-  }
-
-})
-
-btnLoan.addEventListener('click', function (e) {
-  e.preventDefault()
-  const amount = Number(inputLoanAmount.value)
-
-  if (amount > 0 &&
-    currentAccount.movements.some(
-      mov => mov >= amount * 0.1
-    )) {
-    currentAccount.movements.push(amount)
-
-    // update UI
-    updateUI(currentAccount)
-
-  }
-  inputLoanAmount.value = ''
-})
+    })
+imgTarget.forEach(img => imgObserver.observe(img))
 
 
-//  delete account
-btnClose.addEventListener('click', function (e) {
-  e.preventDefault()
+// Slider
+const slides = document.querySelectorAll('.slide')
+const btnLeft = document.querySelector('.slider__btn--left')
+const btnRight = document.querySelector('.slider__btn--right')
+const dotContainer = document.querySelector('.dots')
 
 
-  if (inputCloseUsername.value === currentAccount.username
-    && Number(inputClosePin.value) === currentAccount.pin) {
-    const index = accounts.findIndex(
-      acc => acc.username === currentAccount.username
+let curSlide = 0
+const maxSlide = slides.length
+
+const createDots = function () {
+  slides.forEach(function (_, i) {
+    dotContainer.insertAdjacentHTML(
+      'beforeend',
+      `<button class="dots__dot" data-slide="${i}"></button>`
     )
-    // delete the account
-    accounts.splice(index, 1)
-    //Hide UI
-    containerApp.style.opacity = 100;
-  }
-  inputCloseUsername.value = inputClosePin.value = ' '
-
-
-})
-
-let sorted = false
-
-btnSort.addEventListener('click', function (e) {
-  e.preventDefault()
-  dispayMovements(currentAccount.movements, !sorted)
-  sorted = !sorted
-
-})
-
-const convertTitle = function (title) {
-  const expections = ['a', 'an', 'the', 'but', 'or', 'in', 'with']
-
-  const titleCase = title
-    .toLowerCase()
-    .split(' ')
-    .map(word => expections
-      .includes(word) ? word : word[0]
-        .toUpperCase() + word
-          .slice(1)).join(' ')
-  return titleCase
+  })
 }
 
-console.log(convertTitle('this is a nice title'))
+createDots()
+
+const activeDot = function (slide) {
+  document.querySelectorAll('.dots__dot')
+    .forEach(dots => dots.classList.remove('dots__dot--active'))
+
+  document
+    .querySelector(`.dots__dot[data-slide="${slide}"]`)
+    .classList.add('dots__dot--active')
+}
+activeDot(0)
+
+const goToSlide = function (slide) {
+  slides.forEach((s, i) => (s.style.transform = `translateX(${100 * (i - slide)}%)`))
+
+}
+goToSlide(0)
+
+const nextSlide = function () {
+  if (curSlide === maxSlide - 1) {
+    curSlide = 0
+  } else { curSlide++ }
+  goToSlide(curSlide)
+  activeDot(curSlide)
+}
+
+const prevSlide = function () {
+  if (curSlide === 0) {
+    curSlide = maxSlide - 1
+  } else { curSlide-- }
+  goToSlide(curSlide)
+  activeDot(curSlide)
+}
+
+
+btnRight.addEventListener('click', nextSlide)
+btnLeft.addEventListener('click', prevSlide)
+
+document.addEventListener('keydown', function (e) {
+  e.key === 'ArrowLeft' && prevSlide()
+  e.key === 'ArrowRight' && nextSlide()
+})
+
+dotContainer.addEventListener('click', function (e) {
+  if (e.target.classList.contains('dots__dot')) {
+    const { slide } = e.target.dataset
+    goToSlide(slide)
+    activeDot(slide)
+  }
+})
+
+
+// for (let i = 0; i < btnsOpenModal.length; i++)
+//   btnsOpenModal[i].addEventListener('click', openModal);
+
+// const randomInt = (min, max) =>
+//   Math.floor(Math.random() * (max - min + 1) + min)
+
+// const randomColor = () =>
+//   `rgb(${randomInt(0, 255)},${randomInt(0, 255)},${randomInt(0, 255)})`
+
+// const h1 = document.querySelector('.highlight')
+
+// h1.addEventListener('click', function () {
+//   h1.style.backgroundColor = randomColor()
+//   h1.style.color = randomColor()
+
+// })
+
+
+
+
+// console.log(document.querySelector('.header__title'))
+// console.log(document.getElementById('section--1'))
+
+// // creating and inserting elements
+// const message = document.createElement('div')
+// message.classList.add('cookie-message')
+
+// message.innerHTML =
+//   'We use cookied for improved func and analytics. <button class ="btn btn--close-cookie">got it</button>';
+
+// header.prepend(message)
+// header.append(message)
+
+// const title = document.querySelector('.highlight')
+
+// title.style.backgroundColor = 'blue'
+
+// console.log(getComputedStyle(title).color)
+
+// document.documentElement.style.setProperty('--color-primary', 'orangered')
+// const logo = document.querySelector('.nav__logo')
+// console.log(logo.alt)
+// console.log(logo.src)
